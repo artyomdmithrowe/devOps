@@ -1,0 +1,49 @@
+- name: Install Docker packages
+  package:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+
+- name: Start Docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Create deployer user
+  user:
+    name: deployer
+    state: present
+    shell: /bin/bash
+    groups:
+      - sudo
+      - docker
+    append: yes
+
+- name: Create SSH directory for deployer
+  file:
+    path: /home/deployer/.ssh
+    state: directory
+    owner: deployer
+    group: deployer
+    mode: '0700'
+
+- name: Copy SSH public key for deployer
+  copy:
+    src: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa.pub"
+    dest: /home/deployer/.ssh/authorized_keys
+    owner: deployer
+    group: deployer
+    mode: '0600'
+
+- name: Allow deployer to use sudo without password
+  copy:
+    content: "deployer ALL=(ALL) NOPASSWD: ALL\n"
+    dest: /etc/sudoers.d/deployer
+    owner: root
+    group: root
+    mode: '0440'

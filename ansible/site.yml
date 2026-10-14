@@ -1,0 +1,6 @@
+- name: Configure server
+  hosts: devops_servers
+  become: yes
+
+  roles:
+    - common
